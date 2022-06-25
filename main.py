@@ -11,21 +11,22 @@ import shapely.geometry as geom
 warnings.filterwarnings("ignore")
 
 # if __name__ == '__main__':
-discreate_road_pd = pd.read_csv('Chaos-generted road.csv')
+discreate_road_pd = pd.read_csv('0.1road.csv')
 road = discreate_road_pd.to_numpy()
+road= road[:, 1:3]
 
 agent = Agent(layer1_dim=128, layer2_dim=64, n_actions=2, alpha_A=0.0003, alpha_C=0.005, gamma=0.99)
-n_episodes = 100
+n_episodes = 500
 data_length = int(road.shape[0] / 10)  # 10,000
 max_ep_length = 300  # could be int(data_length / n_episodes)
 env = lateralenv(road, data_length, n_episodes, max_ep_length)
 
 cnt = 0
-dist_limit = 5
+dist_limit = 10
 ang_limit1 = 0.79;
 ang_limit2 = -0.79;  # 45 degree
 bad_reward = 10
-res = 8
+res = 0.1
 b = 0  # for render
 score_history = []
 best_score = 0  # reward = 1/positive > 0 -> min score =0
@@ -60,10 +61,10 @@ for ep in range(1, n_episodes + 1):
         action = agent.choose_action(state)
         # assert action != act_buffer , "equal actions !!"
         # act_buffer = action
-
         newvars, state_, reward, reward_calc, Done, pre_point = env.step(action, ep_length, pre_point, ep_length)
 
         if Done == 1:
+            ep_pointer+=10
             break
         # if ep_length >100:
         #   break
@@ -92,11 +93,12 @@ for ep in range(1, n_episodes + 1):
     states_ = np.array(states_)
     score_history.append(score * ep_length / 100)  # ep length should affect score
     ep_pointer += max(int(ep_length / res), 1)
+    #plt.plot(road[ep_pointer, 0], road[ep_pointer, 1], 'bo')
 
     avg_score = np.mean(score_history[-100:])
     if avg_score > best_score:
         best_score = avg_score
-    if (ep % 1 == 0):
+    if (ep % 2 == 0):
         print('episode', ep, 'ep length ', ep_length, 'score', score, 'avg_score', avg_score)
         env.render(ep, score, ep_length)
 

@@ -6,7 +6,7 @@ import math
 
 
 class lateralenv:
-    def __init__(self, data, data_length, n_episodes, episode_length):
+    def __init__(self, data, data_length, n_episodes, max_ep_length):
         # constants
         dt = 0.01
         vx = 10
@@ -26,8 +26,8 @@ class lateralenv:
 
         self.data_length = data_length
         self.n_episodes = n_episodes
-        self.episode_length = episode_length
-        self.episode_length_cnt = episode_length
+        self.episode_length_cnt = max_ep_length
+        self.max_ep_length = max_ep_length  # could be int(data_length / n_episodes)
 
         self.road = data[0:data_length, :]
         self.x = data[0:data_length, 0]
@@ -54,15 +54,12 @@ class lateralenv:
 
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-        self.n_episodes = 100
-        self.max_ep_length = 300  # could be int(data_length / n_episodes)
-
         self.cnt = 0
         self.dist_limit = 5
         self.ang_limit1 = 0.79;
         self.ang_limit2 = -0.79;  # 45 degree
         self.bad_reward = 10
-        self.res = 8
+        self.res = 0.1 #x_acc
         self.b = 0  # for render
         self.score_history = []
         self.best_score = 0  # reward = 1/positive > 0 -> min score =0
@@ -157,7 +154,7 @@ class lateralenv:
         self.episode_length_cnt = self.episode_length_cnt - 1
 
         if dist > self.dist_limit or angle_diff > self.ang_limit1 or angle_diff < self.ang_limit2 or self.episode_length_cnt == 0:
-            print("141 step :  dist", dist, "angle", angle_diff)
+            print("step :  dist", dist, "angle", angle_diff)
             self.Done = 1
             # return self.vars_, self.state_,  bad_reward, 'nothing' , self.Done, pre_point
             return None, None, self.bad_reward, 'nothing', self.Done, None
@@ -169,7 +166,7 @@ class lateralenv:
             future_dist, future_angle_diff = self.normalize(d=future_dist, a=future_angle_diff)
             weight = 1
             action_weight = -10
-            preview_weight = 0.01
+            preview_weight = 0.1
             # print("point", point, dist, "ang", angle_diff)
             # print("dist", dist, "ang", angle_diff)
             k1 = 1 / (dist ** 2 + angle_diff ** 2)
@@ -197,7 +194,6 @@ class lateralenv:
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     def render(self, ep, score, ep_length):
-        print("render")
         plt.xlabel("x")
         plt.ylabel("y")
         plt.plot(self.road_ep.coords.xy[0][:], self.road_ep.coords.xy[1][:], 'r')  # road
@@ -206,7 +202,7 @@ class lateralenv:
             # b=1
         if ep % 5 == 0 and ep_length != 0:
             # plt.legend()
-            plt.show()
+            # plt.show()
             plt.savefig(f"path{ep}.jpg")
             plt.cla()
             b = 0
