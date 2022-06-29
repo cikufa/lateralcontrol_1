@@ -141,8 +141,12 @@ class lateralenv:
     def step(self, action, stp_cnt, pre_point, ep_length):
         self.preview(action, preview=0)
         # print("____________________________NOT preview_________________________")
-        dist, angle_diff, pre_point = lateralenv.dist_diff(self, ep=0, limit_dist=1, limit_ang=0, stp=stp_cnt,
-                                                           pre_point=pre_point)
+        dist, angle_diff, pre_point2 = lateralenv.dist_diff(self, ep=0, limit_dist=1, limit_ang=0, stp=stp_cnt,pre_point=pre_point)
+
+        if ep_length == 0 and angle_diff> self.ang_limit1:
+            dist, angle_diff, pre_point2 = lateralenv.dist_diff(self, ep=0, limit_dist=1, limit_ang=0, stp=stp_cnt,
+                                                                pre_point=pre_point)
+        pre_point = pre_point2
         #print("in step", dist, angle_diff)
         # dist, angle_diff= self.normalize(d=dist, a=angle_diff)
         self.preview(action, preview=1)
@@ -154,7 +158,8 @@ class lateralenv:
         self.episode_length_cnt = self.episode_length_cnt - 1
 
         if dist > self.dist_limit or angle_diff > self.ang_limit1 or angle_diff < self.ang_limit2 or self.episode_length_cnt == 0:
-            print("step :  dist", dist, "angle", angle_diff)
+            if ep_length == 0:
+                print("step :  dist", dist, "angle", angle_diff)
             self.Done = 1
             # return self.vars_, self.state_,  bad_reward, 'nothing' , self.Done, pre_point
             return None, None, self.bad_reward, 'nothing', self.Done, None
@@ -228,6 +233,8 @@ class lateralenv:
         # st_psi = self.heading_angle[ep_pointer]  # + np.random.rand()*0.01
         st_psi = (self.data_ep[1,1] - self.data_ep[0,1]) / (self.data_ep[1,0] - self.data_ep[0,0])
         st_pre_point = geom.Point(st_x, st_y)
+
+        #print(st_x, st_y)
 
         self.vars = np.array([[st_vy, st_r, st_x, st_y, st_psi]], dtype='float64').T
         self.vars_tmp = np.array([[st_vy, st_r, st_x, st_y, st_psi]],

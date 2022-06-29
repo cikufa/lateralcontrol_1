@@ -6,7 +6,7 @@ import xlsxwriter
 import warnings
 import pandas as pd
 import tensorflow as tf
-import shapely.geometry as geom
+
 
 warnings.filterwarnings("ignore")
 
@@ -64,7 +64,7 @@ for ep in range(1, n_episodes + 1):
         newvars, state_, reward, reward_calc, Done, pre_point = env.step(action, ep_length, pre_point, ep_length)
 
         if Done == 1:
-            ep_pointer+=10
+            ep_pointer +=10
             break
         # if ep_length >100:
         #   break
@@ -98,7 +98,7 @@ for ep in range(1, n_episodes + 1):
     avg_score = np.mean(score_history[-100:])
     if avg_score > best_score:
         best_score = avg_score
-    if (ep % 2 == 0):
+    if (ep_length == 0):
         print('episode', ep, 'ep length ', ep_length, 'score', score, 'avg_score', avg_score)
         env.render(ep, score, ep_length)
 
