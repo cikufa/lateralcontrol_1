@@ -126,8 +126,9 @@ class lateralenv:
                              [vx * math.sin(psi)], [0]], dtype='float64')
 
         var_dot_mat = par_mat1 @ self.vars + par_mat2  # (5,1)= (5,5)@(5,1)+(5,1)
-        self.vars_tmp = self.vars + dt * var_dot_mat  # (5,1) =(5,1)+(5,1)
 
+        self.vars_tmp = self.vars + dt * var_dot_mat  # (5,1) =(5,1)+(5,1)
+        self.vars_tmp[4, 0] = self.vars[4, 0] + dt * self.vars_tmp[1, 0]
         if preview == 0:
             self.vars_ = self.vars_tmp
 
@@ -234,7 +235,7 @@ class lateralenv:
         st_psi = (self.data_ep[1,1] - self.data_ep[0,1]) / (self.data_ep[1,0] - self.data_ep[0,0])
         st_pre_point = geom.Point(st_x, st_y)
 
-        #print(st_x, st_y)
+        print(st_x, st_y,st_psi)
 
         self.vars = np.array([[st_vy, st_r, st_x, st_y, st_psi]], dtype='float64').T
         self.vars_tmp = np.array([[st_vy, st_r, st_x, st_y, st_psi]],
