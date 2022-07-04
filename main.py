@@ -6,28 +6,24 @@ import xlsxwriter
 import warnings
 import pandas as pd
 import tensorflow as tf
-
+import torch 
 
 warnings.filterwarnings("ignore")
-
+device = torch.device("cpu:0")
 # if __name__ == '__main__':
-discreate_road_pd = pd.read_csv('0.1road.csv')
+# discreate_road_pd = pd.read_csv('0.1road.csv')
+discreate_road_pd = pd.read_excel('sin road.xlsx')
 road = discreate_road_pd.to_numpy()
-road= road[:, 1:3]
+# road= road[:, 1:3]
 
 agent = Agent(layer1_dim=128, layer2_dim=64, n_actions=2, alpha_A=0.0003, alpha_C=0.005, gamma=0.99)
 n_episodes = 500
-data_length = int(road.shape[0] / 10)  # 10,000
+data_length = int(road.shape[0])  # sin road = 10,000
 max_ep_length = 300  # could be int(data_length / n_episodes)
 env = lateralenv(road, data_length, n_episodes, max_ep_length)
 
 cnt = 0
-dist_limit = 10
-ang_limit1 = 0.79;
-ang_limit2 = -0.79;  # 45 degree
-bad_reward = 10
 res = 0.1
-b = 0  # for render
 score_history = []
 best_score = 0  # reward = 1/positive > 0 -> min score =0
 load_checkpoint = False
@@ -52,7 +48,7 @@ for ep in range(1, n_episodes + 1):
     cl = [];
     rewards = []
     # print("b4 reset")
-    state, pre_point = env.reset(ep_pointer)  # (1,2)
+    state, pre_point = env.reset(ep_pointer) # (1,2)
     # print("after reset state", state)
     states_ = []
     ep_length = 0
@@ -98,9 +94,9 @@ for ep in range(1, n_episodes + 1):
     avg_score = np.mean(score_history[-100:])
     if avg_score > best_score:
         best_score = avg_score
-    if (ep_length == 0):
+    if (ep_length %1 == 0):
         print('episode', ep, 'ep length ', ep_length, 'score', score, 'avg_score', avg_score)
-        env.render(ep, score, ep_length)
+        env.render(ep, score, ep_length, ep_pointer)
 
 workbook.close()
 

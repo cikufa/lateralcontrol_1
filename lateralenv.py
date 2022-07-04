@@ -56,18 +56,15 @@ class lateralenv:
 
         self.cnt = 0
         self.dist_limit = 5
-        self.ang_limit1 = 0.79;
-        self.ang_limit2 = -0.79;  # 45 degree
+        self.ang_limit1 = 0.6;
+        self.ang_limit2 = -0.6;  # 45 degree
         self.bad_reward = 10
         self.res = 0.1 #x_acc
         self.b = 0  # for render
-        self.score_history = []
-        self.best_score = 0  # reward = 1/positive > 0 -> min score =0
         self.load_checkpoint = False
 
     def dist_diff(self, ep, limit_dist, limit_ang, stp, pre_point):  # =geom.Point(0,0)):
         vy, r, x, y, psi = self.vars_tmp
-
 
         # 3: based on car's vertical disance with the road
         minus = self.data_ep - np.array((x, y)).reshape([1,2])
@@ -131,7 +128,6 @@ class lateralenv:
         self.vars_tmp[4, 0] = self.vars[4, 0] + dt * self.vars_tmp[1, 0]
         if preview == 0:
             self.vars_ = self.vars_tmp
-
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -143,7 +139,7 @@ class lateralenv:
         self.preview(action, preview=0)
         # print("____________________________NOT preview_________________________")
         dist, angle_diff, pre_point2 = lateralenv.dist_diff(self, ep=0, limit_dist=1, limit_ang=0, stp=stp_cnt,pre_point=pre_point)
-
+        #print("dist", dist,"angle diff", angle_diff)
         if ep_length == 0 and angle_diff> self.ang_limit1:
             dist, angle_diff, pre_point2 = lateralenv.dist_diff(self, ep=0, limit_dist=1, limit_ang=0, stp=stp_cnt,
                                                                 pre_point=pre_point)
@@ -159,8 +155,7 @@ class lateralenv:
         self.episode_length_cnt = self.episode_length_cnt - 1
 
         if dist > self.dist_limit or angle_diff > self.ang_limit1 or angle_diff < self.ang_limit2 or self.episode_length_cnt == 0:
-            if ep_length == 0:
-                print("step :  dist", dist, "angle", angle_diff)
+            print("last dist", dist, "last angle", angle_diff)
             self.Done = 1
             # return self.vars_, self.state_,  bad_reward, 'nothing' , self.Done, pre_point
             return None, None, self.bad_reward, 'nothing', self.Done, None
@@ -171,7 +166,7 @@ class lateralenv:
             dist, angle_diff = self.normalize(d=dist, a=angle_diff)
             future_dist, future_angle_diff = self.normalize(d=future_dist, a=future_angle_diff)
             weight = 1
-            action_weight = -10
+            action_weight = -1
             preview_weight = 0.1
             # print("point", point, dist, "ang", angle_diff)
             # print("dist", dist, "ang", angle_diff)
@@ -199,16 +194,24 @@ class lateralenv:
 
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    def render(self, ep, score, ep_length):
+    def render(self, ep, score, ep_length, pnt):
         plt.xlabel("x")
         plt.ylabel("y")
-        plt.plot(self.road_ep.coords.xy[0][:], self.road_ep.coords.xy[1][:], 'r')  # road
+        plt.plot(self.road_ep.coords.xy[0][0:50], self.road_ep.coords.xy[1][0:50], 'r')  # road
         if ep_length != 0:
             plt.plot(np.array(self.coordinates)[:, 0], np.array(self.coordinates)[:, 1], label=score)  # path
             # b=1
-        if ep % 5 == 0 and ep_length != 0:
-            # plt.legend()
+        #if(ep_length<10):
+            # plt.xlim(pnt-100, pnt+50)
+            # plt.ylim(-150, 150)
+            # plt.gca().set_aspect('equal', adjustable='box')
+            #plt.show()
+        if ep % 10 == 0 and ep_length != 0:
+            plt.legend()
             # plt.show()
+            # plt.xlim(pnt, pnt+200)
+            # plt.ylim(-150, 150)
+            # plt.gca().set_aspect('equal', adjustable='box')
             plt.savefig(f"path{ep}.jpg")
             plt.cla()
             b = 0
@@ -223,7 +226,7 @@ class lateralenv:
         self.data_ep = self.road[ep_pointer:ep_pointer + int(self.max_ep_length / self.res), :]
         self.road_ep = geom.LineString(zip(self.x[ep_pointer: ep_pointer + int(self.max_ep_length / self.res)],
                                            self.y[ep_pointer: ep_pointer + int(self.max_ep_length / self.res)]))  # 500*2
-
+        
         # the car starts on the road
         st_vy = 0;
         st_r = 0;
@@ -233,9 +236,10 @@ class lateralenv:
         # st_y = self.road[ep_pointer+ep_pointer+1,1]
         # st_psi = self.heading_angle[ep_pointer]  # + np.random.rand()*0.01
         st_psi = (self.data_ep[1,1] - self.data_ep[0,1]) / (self.data_ep[1,0] - self.data_ep[0,0])
+
         st_pre_point = geom.Point(st_x, st_y)
 
-        print(st_x, st_y,st_psi)
+        print("deeeeeeeeebuuuuuu", st_x, st_y,st_psi)
 
         self.vars = np.array([[st_vy, st_r, st_x, st_y, st_psi]], dtype='float64').T
         self.vars_tmp = np.array([[st_vy, st_r, st_x, st_y, st_psi]],
