@@ -71,7 +71,7 @@ class lateralenv:
         distarr = np.sqrt(minus[:, 0] ** 2 + minus[:, 1] ** 2)
         ind = np.argmin(distarr)
         #dist = np.min(distarr)
-        road_slope = (self.data_ep[ind+1, 1] - self.data_ep[ind, 1])/(self.data_ep[ind+1, 0] - self.data_ep[ind, 0]) if ind!=len(self.data_ep)-1 else (self.data_ep[ind, 1] - self.data_ep[ind-1, 1])/(self.data_ep[ind, 0] - self.data_ep[ind-1, 0])
+        road_slope_rad =np.arctan2( (self.data_ep[ind+1, 1] - self.data_ep[ind, 1]),(self.data_ep[ind+1, 0] - self.data_ep[ind, 0])) if ind!=len(self.data_ep)-1 else np.arctan2((self.data_ep[ind, 1] - self.data_ep[ind-1, 1]),(self.data_ep[ind, 0] - self.data_ep[ind-1, 0]))
 
         point = geom.Point(x, y)
         dist = point.distance(self.road_ep)
@@ -84,7 +84,7 @@ class lateralenv:
         self.nearestPiontCheck.append(np.array(nearestP))
         self.nearestPiontCheck.append(np.array(point))
         #road_slope = (nearestP.y - pre_point.y) / (nearestP.x - pre_point.x) if (nearestP.x - pre_point.x) != 0 else (nearestP.y - pre_point.y) / 0.001
-        angle_diff = abs(np.arctan2((road_slope - psi), 1))[0]
+        angle_diff = abs(road_slope_rad - psi)[0]
         # angle_diff = abs(np.arctan2((nearestP.y-pre_point.y),nearestP.x-pre_point.x)- psi[0]) #sara
 
         # index, = np.where(self.road_ep == nearestP)
@@ -206,7 +206,7 @@ class lateralenv:
             # plt.ylim(-150, 150)
             # plt.gca().set_aspect('equal', adjustable='box')
             #plt.show()
-        if ep % 10 == 0 and ep_length != 0:
+        if ep % 1 == 0 and ep_length != 0:
             plt.legend()
             # plt.show()
             # plt.xlim(pnt, pnt+200)
@@ -235,9 +235,14 @@ class lateralenv:
         st_y = self.data_ep[0, 1]  # + np.random.rand()
         # st_y = self.road[ep_pointer+ep_pointer+1,1]
         # st_psi = self.heading_angle[ep_pointer]  # + np.random.rand()*0.01
-        st_psi = (self.data_ep[1,1] - self.data_ep[0,1]) / (self.data_ep[1,0] - self.data_ep[0,0])
+        st_psi = np.arctan2((self.data_ep[1,1] - self.data_ep[0,1]) , (self.data_ep[1,0] - self.data_ep[0, 0]))
 
         st_pre_point = geom.Point(st_x, st_y)
+
+        #psi_test_x = st_x - 0.1
+        #psi_test_y = st_y + (-0.1)*st_psi
+        #self.coordinates.append([psi_test_x, psi_test_y])
+        self.coordinates.append([st_x, st_y])
 
         print("deeeeeeeeebuuuuuu", st_x, st_y,st_psi)
 

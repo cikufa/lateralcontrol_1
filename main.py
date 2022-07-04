@@ -6,10 +6,10 @@ import xlsxwriter
 import warnings
 import pandas as pd
 import tensorflow as tf
-import torch 
+#import torch
 
 warnings.filterwarnings("ignore")
-device = torch.device("cpu:0")
+#device = torch.device("cpu:0")
 # if __name__ == '__main__':
 # discreate_road_pd = pd.read_csv('0.1road.csv')
 discreate_road_pd = pd.read_excel('sin road.xlsx')
