@@ -62,9 +62,9 @@ class lateralenv:
         self.res = 0.1 #x_acc
         self.b = 0  # for render
         self.load_checkpoint = False
-        self.dt= 0.05
+        self.dt= 0.1
         self.preview_dt= 0.3
-        self.action_freq= 0.2
+        self.action_freq= 1
 
     def dist_diff(self, ep, limit_dist, limit_ang, stp, pre_point):  # =geom.Point(0,0)):
         vy, r, x, y, psi = self.vars_tmp
@@ -169,13 +169,13 @@ class lateralenv:
         else:
             dist, angle_diff = self.normalize(d=dist, a=angle_diff)
             future_dist, future_angle_diff = self.normalize(d=future_dist, a=future_angle_diff)
-            weight = 1
-            action_weight = -1
-            preview_weight = 0.1
+            weight = 0.01
+            action_weight = -0.01
+            preview_weight = 0.001
             # print("point", point, dist, "ang", angle_diff)
             # print("dist", dist, "ang", angle_diff)
-            k1 = 10 / (dist**2) + 1/angle_diff 
-            k2 = 10 / (future_dist**2)  + 1/future_angle_diff
+            k1 = 1 /dist + 1/angle_diff**2
+            k2 = 1 /future_dist  + 1/future_angle_diff**2
             ep_len_weight = 1
             reward_calc = f'{weight} * {k1} + {preview_weight}*{k2} + {action_weight} * {action} + {ep_len_weight} * {ep_length}'
             # reward = - angle_diff
@@ -210,7 +210,7 @@ class lateralenv:
             # plt.ylim(-150, 150)
             # plt.gca().set_aspect('equal', adjustable='box')
             #plt.show()
-        if ep % 5 == 0 and ep_length != 0:
+        if ep % 10 == 0 and ep_length != 0:
             plt.legend()
             # plt.show()
             # plt.xlim(pnt, pnt+200)

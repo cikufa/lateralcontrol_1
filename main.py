@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # road= road[:, 1:3]
 
     agent = Agent(layer1_dim=128, layer2_dim=64, n_actions=2, alpha_A=0.0003, alpha_C=0.005, gamma=0.99)
-    n_episodes = 1000
+    n_episodes = 10000
     data_length = int(road.shape[0])  # sin road = 10,000
     max_ep_length = 300  # could be int(data_length / n_episodes)
     env = lateralenv(road, data_length, n_episodes, max_ep_length)
@@ -61,8 +61,8 @@ if __name__ == '__main__':
         while True:
             if t % (env.action_freq/env.dt)==0:
                 action = agent.choose_action(state)
-            else:
-                action = 0
+            # else:
+            #     action = 0
 
             newvars, state_, reward, reward_calc, Done, pre_point ,t= env.step(action, ep_length, pre_point, ep_length, t)
             #print("debug", t, action)
