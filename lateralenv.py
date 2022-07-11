@@ -197,7 +197,7 @@ class lateralenv:
     def render(self, ep, score, ep_length, pnt):
         plt.xlabel("x")
         plt.ylabel("y")
-        plt.plot(self.road_ep.coords.xy[0][0:50], self.road_ep.coords.xy[1][0:50], 'r')  # road
+        plt.plot(self.road_ep.coords.xy[0][0:200], self.road_ep.coords.xy[1][0:200], 'r')  # road
         if ep_length != 0:
             plt.plot(np.array(self.coordinates)[:, 0], np.array(self.coordinates)[:, 1], label=score)  # path
             # b=1
