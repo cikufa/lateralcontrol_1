@@ -4,6 +4,7 @@
     <list default="true" id="336947ff-eb89-4d02-925b-c7d58206b7f2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lateralenv.py" beforeDir="false" afterPath="$PROJECT_DIR$/lateralenv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -91,6 +92,7 @@
       <option name="presentableId" value="Default" />
       <updated>1656942367356</updated>
       <workItem from="1656942371213" duration="9909000" />
+      <workItem from="1657554731458" duration="844000" />
     </task>
     <servers />
   </component>
@@ -102,7 +104,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>50</line>
+          <line>28</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>
