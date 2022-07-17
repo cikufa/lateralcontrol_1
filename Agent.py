@@ -81,11 +81,11 @@ class Agent:
         gradient1 = tape.gradient(actor_loss, self.actor.trainable_variables)
 
         self.actor.optimizer.apply_gradients(
-            (grad, var) for (grad, var) in zip(gradient1, self.actor.trainable_variables) if grad is not None)
+            (grad, var) for (grad, var) in zip(gradient1, self.actor.trainable_variables))
         # if grad is not None
 
         gradient2 = tape.gradient(critic_loss, self.critic.trainable_variables)
         self.critic.optimizer.apply_gradients(
-            (grad, var) for (grad, var) in zip(gradient2, self.critic.trainable_variables) if grad is not None)
+            (grad, var) for (grad, var) in zip(gradient2, self.critic.trainable_variables))
         # if grad is not None
         return critic_loss, actor_loss, gradient1
