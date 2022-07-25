@@ -180,10 +180,14 @@ class lateralenv:
 
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    def render(self, ep, score, ep_length, pnt):
+    def render(self, ep, score, ep_length, pnt, alosses, closses):
+        ### f1 = road and path
+        plt.figure(1)
         plt.xlabel("x")
         plt.ylabel("y")
+
         plt.plot(self.road_ep.coords.xy[0][:], self.road_ep.coords.xy[1][:], 'r')  # road
+
         if ep_length != 0:
             plt.plot(np.array(self.coordinates)[:, 0], np.array(self.coordinates)[:, 1], label=score)  # path
             # b=1
@@ -198,11 +202,28 @@ class lateralenv:
             # plt.xlim(pnt, pnt+200)
             # plt.ylim(-150, 150)
             # plt.gca().set_aspect('equal', adjustable='box')
-            plt.savefig(f"path{ep}.jpg")
+            plt.savefig(f"paths/path{ep}.jpg")
             plt.cla()
             b = 0
 
-    def reset(self, ep_pointer,t_cnt):  # before each episode
+        ### f2 = aloss
+        plt.figure(2)
+        xa = np.arange(len(alosses))
+        plt.plot(xa, np.array(alosses)[:,0,0])
+        plt.savefig(f"aloss/aloss{ep}.jpg")
+        plt.cla()
+
+        ### f3 = closs
+        plt.figure(3)
+        xc = np.arange(len(closses))
+        plt.plot(xc, np.array(closses)[:,0,0])
+        plt.savefig(f"closs/closs{ep}.jpg")
+        plt.cla()
+
+    def reset(self, ep_pointer,t):  # before each episode
+        if ep_pointer > (self.road.shape[0] - 300): # =max_episode_length. resets the road and stars from the begining
+            ep_pointer = 0
+
         self.Done = 0
         self.episode_length_cnt = self.max_ep_length
         self.coordinates = []
@@ -246,4 +267,4 @@ class lateralenv:
 
         state0_ep = np.array([limited_dist0, limited_angle_diff0, future_limited_dist0, future_limited_ang0])  # (1,4)
 
-        return state0_ep, st_pre_point
+        return state0_ep, st_pre_point, ep_pointer

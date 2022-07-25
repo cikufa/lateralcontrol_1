@@ -5,7 +5,11 @@ import matplotlib.pyplot as plt
 import xlsxwriter
 from lateralenv import *
 
+<<<<<<< HEAD
 n=10000
+=======
+n=1000000
+>>>>>>> 96d5ba3d0e1211e8afb768f98d8d6c35d0504cbf
 res= 0.1
 lat=np.linspace(1,n,int(n/res)) 
 long = 100* np.sin(np.radians(lat))
@@ -15,7 +19,8 @@ road.write(0,0, "lat")
 road.write(0,1, "long")
 for i in range(1,len(lat)):
     road.write(i,0, lat[i])
-    road.write(i,1, long[i])    
+    road.write(i,1, long[i])
+    print(i)
 workbook.close()
 
 # file = pd.read_excel("sin road.xlsx")
