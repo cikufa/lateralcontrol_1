@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import xlsxwriter
 from lateralenv import *
 
-n=100000
+n=10000
 res= 0.1
 lat=np.linspace(1,n,int(n/res)) 
 long = 100* np.sin(np.radians(lat))

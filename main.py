@@ -52,22 +52,25 @@ if __name__ == '__main__':
         al = [];
         cl = [];
         rewards = []
-        t=0
-        state, pre_point = env.reset(ep_pointer, t) # (1,2)
+        t_cnt=0
+        state, pre_point = env.reset(ep_pointer, t_cnt) # (1,2)
         # print("after reset state", state)
         states_ = []
         ep_length = 0
         # print(ep, ":____________________________________________________________________________")
         while True:
-            if t % (env.action_freq/env.dt)==0:
+            if env.t_cnt % int(env.action_freq/env.simulation_dt)==0:
                 action = agent.choose_action(state)
-            # else:
-            #     action = 0
-
-            newvars, state_, reward, reward_calc, Done, pre_point ,t= env.step(action, ep_length, pre_point, ep_length, t)
+            else:
+                action = 0 # just for erorr handle 
+                                                             
+            newvars, state_, reward, reward_calc, Done, pre_point = env.train_step(action, pre_point, ep_length)
             #print("debug", t, action)
             if Done == 1:
-                ep_pointer +=10
+                if ep_pointer+10 > len(road):
+                    ep_pointer= 0
+                else:
+                    ep_pointer +=10              
                 break
             # if ep_length >100:
             #   break

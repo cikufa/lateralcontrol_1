@@ -62,13 +62,13 @@ class lateralenv:
         self.res = 0.1 #x_acc
         self.b = 0  # for render
         self.load_checkpoint = False
-        self.dt= 0.1
-        self.preview_dt= 0.3
-        self.action_freq= 1
+        self.simulation_dt= 0.01
+        self.preview_dt= 0.03
+        self.action_freq= 0.1
+        self.t_cnt= 0
 
-    def dist_diff(self, ep, limit_dist, limit_ang, stp, pre_point):  # =geom.Point(0,0)):
+    def dist_diff(self, limit_dist, limit_ang):  # =geom.Point(0,0)):
         vy, r, x, y, psi = self.vars_tmp
-
         # 3: based on car's vertical disance with the road
         minus = self.data_ep - np.array((x, y)).reshape([1,2])
         distarr = np.sqrt(minus[:, 0] ** 2 + minus[:, 1] ** 2)
@@ -79,9 +79,6 @@ class lateralenv:
         point = geom.Point(x, y)
         dist = point.distance(self.road_ep)
         limited_dist = max(dist, 0.01)  # for makhraj problems
-
-        # limited_dist = min(limited_dist, 100)
-        # dist_z = math.sqrt((y - self.y0) ** 2 + (x - self.x0) ** 2)
 
         nearestP = nearest_points(self.road_ep, point)[0]
         self.nearestPiontCheck.append(np.array(nearestP))
@@ -105,17 +102,15 @@ class lateralenv:
         else:
             return dist, angle_diff, nearestP
 
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-    def preview(self, action, t,
+    def sim_step(self, action,
                 preview):  # in this version the preview point is calculated using the updated self.vars. also try with non-updated vars
         dt, vx, iz, m, cb, cr, db, dr, cd, dd = self.constants
         vy, r, x, y, psi = np.vsplit(self.vars, 5)
         if preview == 1:
             dt = self.preview_dt
         if preview == 0:
-            dt = self.dt
-            t+= 1
+            dt = self.simulation_dt
+            self.t_cnt+= 1
         # calc new state
         par_mat1 = np.array([[cb / (m * vx), cr / m - vx, 0, 0, 0],
                              [db / (iz * vx), dr / iz, 0, 0, 0],
@@ -132,69 +127,56 @@ class lateralenv:
         # self.vars_tmp[4, 0] = self.vars[4, 0] + dt * self.vars_tmp[1, 0]
         if preview == 0:
             self.vars_ = self.vars_tmp
-        return t
-
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
     def normalize(self, d, a):
         # return d/(dist_limit-0), a/(ang_limit1-ang_limit2)
         return d / (self.dist_limit - 0), a
 
-    def step(self, action, stp_cnt, pre_point, ep_length,t):
-        t= self.preview(action,t, preview=0)
-        # print("____________________________NOT preview_________________________")
-        dist, angle_diff, pre_point2 = lateralenv.dist_diff(self, ep=0, limit_dist=1, limit_ang=0, stp=stp_cnt,pre_point=pre_point)
-        #print("dist", dist,"angle diff", angle_diff)
-        if ep_length == 0 and angle_diff> self.ang_limit1:
-            dist, angle_diff, pre_point2 = lateralenv.dist_diff(self, ep=0, limit_dist=1, limit_ang=0, stp=stp_cnt,
-                                                                pre_point=pre_point)
-        pre_point = pre_point2
-        #print("in step", dist, angle_diff)
-        # dist, angle_diff= self.normalize(d=dist, a=angle_diff)
-        self.preview(action,t, preview=1)
-        # print("____________________________preview______________________________")
-        future_dist, future_angle_diff, _ = lateralenv.dist_diff(self, ep=0, limit_dist=1, limit_ang=0,
-                                                                 stp=stp_cnt, pre_point=pre_point)
-        # future_dist, future_angle_diff= self.normalize( d= future_dist, a=future_angle_diff)
+    def train_step(self, action, pre_point, ep_length):
+        self.sim_step(action, preview=0)
+        self.vars = self.vars_
+        self.coordinates.append(self.vars[2:4, 0])
+        if(self.t_cnt % int(self.action_freq/self.simulation_dt)!=0):
+            dist, angle_diff, pre_point2 = self.dist_diff( limit_dist=1, limit_ang=0)
+            if ep_length == 0 and angle_diff> self.ang_limit1:
+                dist, angle_diff, pre_point2 = self.dist_diff(limit_dist=1, limit_ang=0)
+                                                                   
+            pre_point = pre_point2 # ????????????????????????????
+            self.sim_step(action, preview=1)
+            future_dist, future_angle_diff, _ = self.dist_diff( limit_dist=1, limit_ang=0)
+            self.episode_length_cnt = self.episode_length_cnt - 1
 
-        self.episode_length_cnt = self.episode_length_cnt - 1
+            if dist > self.dist_limit or angle_diff > self.ang_limit1 or angle_diff < self.ang_limit2 or self.episode_length_cnt == 0:
+                print("last dist", dist, "last angle", angle_diff)
+                self.Done = 1
+                # return self.vars_, self.state_,  bad_reward, 'nothing' , self.Done, pre_point
+                return None, None, self.bad_reward, 'nothing', self.Done, None
+            # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% calc reward %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        if dist > self.dist_limit or angle_diff > self.ang_limit1 or angle_diff < self.ang_limit2 or self.episode_length_cnt == 0:
-            print("last dist", dist, "last angle", angle_diff)
-            self.Done = 1
-            # return self.vars_, self.state_,  bad_reward, 'nothing' , self.Done, pre_point
-            return None, None, self.bad_reward, 'nothing', self.Done, None, t
-        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% calc reward %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            # 3: based on car's vertical disance with the road
+            else:
+                #calc reward
+                dist, angle_diff = self.normalize(d=dist, a=angle_diff)
+                future_dist, future_angle_diff = self.normalize(d=future_dist, a=future_angle_diff)
+                weight = 0.01
+                action_weight = -0.01
+                preview_weight = 0.001
+                k1 = 1 /dist + 1/angle_diff**2
+                k2 = 1 /future_dist  + 1/future_angle_diff**2
+                ep_len_weight = 1
+                reward_calc = f'{weight} * {k1} + {preview_weight}*{k2} + {action_weight} * {action} + {ep_len_weight} * {ep_length}'
+                ## 4: Sarah test
+                reward = k1 * weight + k2 * preview_weight + action_weight * action + ep_len_weight * (
+                            self.max_ep_length - self.episode_length_cnt)
 
-        # 3: based on car's vertical disance with the road
-        else:
-            dist, angle_diff = self.normalize(d=dist, a=angle_diff)
-            future_dist, future_angle_diff = self.normalize(d=future_dist, a=future_angle_diff)
-            weight = 0.01
-            action_weight = -0.01
-            preview_weight = 0.001
-            # print("point", point, dist, "ang", angle_diff)
-            # print("dist", dist, "ang", angle_diff)
-            k1 = 1 /dist + 1/angle_diff**2
-            k2 = 1 /future_dist  + 1/future_angle_diff**2
-            ep_len_weight = 1
-            reward_calc = f'{weight} * {k1} + {preview_weight}*{k2} + {action_weight} * {action} + {ep_len_weight} * {ep_length}'
-            # reward = - angle_diff
+                # print("dist", dist,"angd", angle_diff, "p dist",future_dist, "p angd", future_angle_diff)
+                self.state_ = np.array([dist, angle_diff, future_dist, future_angle_diff])  # real state (not limited)
+                # self.state_ = np.array([dist, angle_diff]) #real state (not limited)
 
-            ## 4: Sarah test
-            # ------------------------
-            reward = k1 * weight + k2 * preview_weight + action_weight * action + ep_len_weight * (
-                        self.max_ep_length - self.episode_length_cnt)
-
-            # print("dist", dist,"angd", angle_diff, "p dist",future_dist, "p angd", future_angle_diff)
-            self.state_ = np.array([dist, angle_diff, future_dist, future_angle_diff])  # real state (not limited)
-            # self.state_ = np.array([dist, angle_diff]) #real state (not limited)
-
-            # for next step
-            self.vars = self.vars_
-            self.coordinates.append(self.vars[2:4, 0])
-            self.vys.append(self.vars[0])
-
-            return self.vars_, self.state_, reward, reward_calc, self.Done, pre_point, t # state:(dist, ang_dif)
+                # for next step
+                # self.vars = self.vars_
+                # self.coordinates.append(self.vars[2:4, 0])
+                return self.vars_, self.state_, reward, reward_calc, self.Done, pre_point # state:(dist, ang_dif)
 
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -220,7 +202,7 @@ class lateralenv:
             plt.cla()
             b = 0
 
-    def reset(self, ep_pointer,t):  # before each episode
+    def reset(self, ep_pointer,t_cnt):  # before each episode
         self.Done = 0
         self.episode_length_cnt = self.max_ep_length
         self.coordinates = []
@@ -254,13 +236,12 @@ class lateralenv:
                                  dtype='float64').T  # is updated for both normal step and preview step
 
         # point0_ep = geom.Point(st_x, st_y)
-        limited_dist0, limited_angle_diff0, pre_p = self.dist_diff(ep=0, limit_dist=1, limit_ang=0, stp=0,
-                                                                   pre_point=st_pre_point)
+        limited_dist0, limited_angle_diff0, pre_p = self.dist_diff(limit_dist=1, limit_ang=0)
         limited_dist0, limited_angle_diff0 = self.normalize(limited_dist0, limited_angle_diff0)
 
-        self.preview(0,t, preview=1)
-        future_limited_dist0, future_limited_ang0, _ = self.dist_diff(ep=0, limit_dist=1, limit_ang=0, stp=0,
-                                                                      pre_point=pre_p)  # sefr
+        self.sim_step(0, preview=1)
+        future_limited_dist0, future_limited_ang0, _ = self.dist_diff(limit_dist=1, limit_ang=0)
+                                                                    
         future_limited_dist0, future_limited_ang0 = self.normalize(future_limited_dist0, future_limited_ang0)
 
         state0_ep = np.array([limited_dist0, limited_angle_diff0, future_limited_dist0, future_limited_ang0])  # (1,4)
