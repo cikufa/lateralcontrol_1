@@ -48,6 +48,7 @@ if __name__ == '__main__':
     # training________________________________________________________________________________________
     ep_pointer = 0
     epnum = 1
+    
     try:
         for ep in range(1, n_episodes + 1):
             epnum = ep
@@ -57,49 +58,50 @@ if __name__ == '__main__':
             al = [];
             cl = [];
             rewards = []
-            t=0
-            state, pre_point, ep_pointer = env.reset(ep_pointer, t) # (1,2)
-            # print("after reset state", state)
+            
+            state, pre_point, ep_pointer = env.reset(ep_pointer) # (1,2)
+            action = agent.choose_action(state) #initial action
             states_ = []
             ep_length = 0
-            # print(ep, ":____________________________________________________________________________")
+            reward_for_few_steps= 0
             while True:
-                if t % (env.action_freq/env.dt)==0:
-                    action = agent.choose_action(state)
-                # else:
-                #     action = 0
+                env.sim_step(action, 0)
+               
+                if env.t_cnt % (env.reward_dt/env.sim_dt)==0:
+                    newvars, state_, reward, reward_calc, Done, pre_point= env.step(action, pre_point, ep_length)
+                    reward_for_few_steps+=reward
+                    if env.t_cnt % (env.action_dt/env.sim_dt):
+                        action = agent.choose_action(state)
+                
+                    if Done == 1:
+                        ep_pointer +=10
+                        break
+                    # if ep_length >100:
+                    #   break
+                    else:
+                        states_.append(state_)
+                        reward_for_few_steps= tf.get_static_value(reward_for_few_steps)
+                        score = score + reward_for_few_steps
+                        rewards.append(reward_for_few_steps)
 
-                newvars, state_, reward, reward_calc, Done, pre_point ,t= env.step(action, ep_length, pre_point, ep_length, t)
-                #print("debug", t, action)
-                if Done == 1:
-                    ep_pointer +=10
-                    break
-                # if ep_length >100:
-                #   break
-                else:
-                    states_.append(state_)
-                    reward = tf.get_static_value(reward)
-                    score = score + reward
-                    rewards.append(reward)
+                        # if not load_checkpoint:
+                        closs, aloss, grad1 = agent.learn(state, reward_for_few_steps, state_, Done)
+                        alosses.append(aloss)
+                        closses.append(closs)
 
-                    # if not load_checkpoint:
-                    closs, aloss, grad1 = agent.learn(state, reward, state_, Done)
-                    alosses.append(aloss)
-                    closses.append(closs)
+                        # log
+                        # log.write(ep_pointer + ep_length + 1, 0, f"{ep} / {ep_length}")
+                        # log.write(ep_pointer + ep_length + 1, 3, newvars[0])
+                        # log.write(ep_pointer + ep_length + 1, 4, str(newvars[2:4]))
+                        # log.write(ep_pointer + ep_length + 1, 5, state_[0])
+                        # log.write(ep_pointer + ep_length + 1, 6, state_[1])
+                        # log.write(ep_pointer + ep_length + 1, 7, np.cos(newvars[2] / 200)[0] / 4)
+                        # log.write(ep_pointer + ep_length + 1, 8, newvars[-1])
+                        # log.write(ep_pointer + ep_length + 1, 9, reward)
+                        # log.write(ep_pointer + ep_length + 1, 10, reward_calc)
 
-                    # log
-                    # log.write(ep_pointer + ep_length + 1, 0, f"{ep} / {ep_length}")
-                    # log.write(ep_pointer + ep_length + 1, 3, newvars[0])
-                    # log.write(ep_pointer + ep_length + 1, 4, str(newvars[2:4]))
-                    # log.write(ep_pointer + ep_length + 1, 5, state_[0])
-                    # log.write(ep_pointer + ep_length + 1, 6, state_[1])
-                    # log.write(ep_pointer + ep_length + 1, 7, np.cos(newvars[2] / 200)[0] / 4)
-                    # log.write(ep_pointer + ep_length + 1, 8, newvars[-1])
-                    # log.write(ep_pointer + ep_length + 1, 9, reward)
-                    # log.write(ep_pointer + ep_length + 1, 10, reward_calc)
-
-                    state = state_
-                    ep_length += 1  # step counter
+                        state = state_
+                        ep_length += 1  # step counter
 
             states_ = np.array(states_)
             score_history.append(score * ep_length / 100)  # ep length should affect score
