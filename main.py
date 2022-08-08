@@ -24,7 +24,7 @@ if __name__ == '__main__':
     agent = Agent(layer1_dim=128, layer2_dim=64, n_actions=2, alpha_A=0.0003, alpha_C=0.005, gamma=0.5)
     n_episodes = 50000
     data_length = int(road.shape[0])  # sin road = 10,000
-    max_ep_length = 300  # could be int(data_length / n_episodes)
+    max_ep_length = 3000  # could be int(data_length / n_episodes)
     env = lateralenv(road, data_length, n_episodes, max_ep_length)
 
     cnt = 0
@@ -59,49 +59,56 @@ if __name__ == '__main__':
             cl = [];
             rewards = []
             
-            state, pre_point, ep_pointer = env.reset(ep_pointer) # (1,2)
-            action = agent.choose_action(state) #initial action
+            state, ep_pointer = env.reset(ep_pointer)  # (1,2)
+            action = agent.choose_action(state)  # initial action
             states_ = []
             ep_length = 0
-            reward_for_few_steps= 0
+            reward_for_few_steps = 0
+            Done = 0
+            reward = 0
+            reward_calc = 0
             while True:
-                env.sim_step(action, 0)
+                #env.sim_step(action, 0)
+                reward, reward_calc = env.step(action, ep_length)
                
-                if env.t_cnt % (env.reward_dt/env.sim_dt)==0:
-                    newvars, state_, reward, reward_calc, Done, pre_point= env.step(action, pre_point, ep_length)
-                    reward_for_few_steps+=reward
-                    if env.t_cnt % (env.action_dt/env.sim_dt):
-                        action = agent.choose_action(state)
-                
-                    if Done == 1:
-                        ep_pointer +=10
-                        break
-                    # if ep_length >100:
-                    #   break
-                    else:
-                        states_.append(state_)
-                        reward_for_few_steps= tf.get_static_value(reward_for_few_steps)
-                        score = score + reward_for_few_steps
-                        rewards.append(reward_for_few_steps)
+                if env.t_cnt % (env.reward_dt/env.sim_dt) == 0:
+                    reward_for_few_steps += reward
 
-                        # if not load_checkpoint:
-                        closs, aloss, grad1 = agent.learn(state, reward_for_few_steps, state_, Done)
-                        alosses.append(aloss)
-                        closses.append(closs)
+                if env.Done == 1:
+                    ep_pointer += 10
+                    break
 
-                        # log
-                        # log.write(ep_pointer + ep_length + 1, 0, f"{ep} / {ep_length}")
-                        # log.write(ep_pointer + ep_length + 1, 3, newvars[0])
-                        # log.write(ep_pointer + ep_length + 1, 4, str(newvars[2:4]))
-                        # log.write(ep_pointer + ep_length + 1, 5, state_[0])
-                        # log.write(ep_pointer + ep_length + 1, 6, state_[1])
-                        # log.write(ep_pointer + ep_length + 1, 7, np.cos(newvars[2] / 200)[0] / 4)
-                        # log.write(ep_pointer + ep_length + 1, 8, newvars[-1])
-                        # log.write(ep_pointer + ep_length + 1, 9, reward)
-                        # log.write(ep_pointer + ep_length + 1, 10, reward_calc)
+                if env.t_cnt % (env.learn_dt/env.sim_dt) == 0:
+                    states_.append(env.state_)
+                    reward_for_few_steps = tf.get_static_value(reward_for_few_steps)
+                    score = score + reward_for_few_steps
+                    rewards.append(reward_for_few_steps)
 
-                        state = state_
-                        ep_length += 1  # step counter
+                    # if not load_checkpoint:
+                    closs, aloss, grad1 = agent.learn(state, reward_for_few_steps, env.state_, env.Done)
+                    alosses.append(aloss)
+                    closses.append(closs)
+                    reward_for_few_steps = 0
+
+                if env.t_cnt % (env.action_dt/env.sim_dt) == 0:
+                    action = agent.choose_action(state)
+
+
+
+                # log
+                # log.write(ep_pointer + ep_length + 1, 0, f"{ep} / {ep_length}")
+                # log.write(ep_pointer + ep_length + 1, 3, newvars[0])
+                # log.write(ep_pointer + ep_length + 1, 4, str(newvars[2:4]))
+                # log.write(ep_pointer + ep_length + 1, 5, state_[0])
+                # log.write(ep_pointer + ep_length + 1, 6, state_[1])
+                # log.write(ep_pointer + ep_length + 1, 7, np.cos(newvars[2] / 200)[0] / 4)
+                # log.write(ep_pointer + ep_length + 1, 8, newvars[-1])
+                # log.write(ep_pointer + ep_length + 1, 9, reward)
+                # log.write(ep_pointer + ep_length + 1, 10, reward_calc)
+
+                state = env.state_
+                ep_length += 1  # step counter
+
 
             states_ = np.array(states_)
             score_history.append(score * ep_length / 100)  # ep length should affect score

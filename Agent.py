@@ -61,8 +61,8 @@ class Agent:
             # mu , sigma= np.hsplit(pars , 2)
             # mu = np.squeeze(mu)
             # sigma = np.squeeze(sigma)
-            mu = pars[0, 0]
-            sigma = pars[0, 1]
+            mu = pars[0, 0, 0]
+            sigma = pars[0, 0, 1]
             # print(sigma)
             # sigma = tf.exp(sigma)
             # print(sigma)
