@@ -22,13 +22,13 @@ if __name__ == '__main__':
     # road= road[:, 1:3]
 
     agent = Agent(layer1_dim=128, layer2_dim=64, n_actions=2, alpha_A=0.0003, alpha_C=0.005, gamma=0.5)
-    n_episodes = 50000
+    n_episodes = 500
     data_length = int(road.shape[0])  # sin road = 10,000
-    max_ep_length = 3000  # could be int(data_length / n_episodes)
+    max_ep_length = 300  # could be int(data_length / n_episodes)
     env = lateralenv(road, data_length, n_episodes, max_ep_length)
 
     cnt = 0
-    res = 0.1
+    res = 0.1 #0.1
     score_history = []
     best_score = 0  # reward = 1/positive > 0 -> min score =0
     load_checkpoint = False
@@ -68,11 +68,12 @@ if __name__ == '__main__':
             reward = 0
             reward_calc = 0
             while True:
-                #env.sim_step(action, 0)
-                reward, reward_calc = env.step(action, ep_length)
-               
+                env.sim_step(action)
+
                 if env.t_cnt % (env.reward_dt/env.sim_dt) == 0:
+                    reward, reward_calc = env.step(action, ep_length)
                     reward_for_few_steps += reward
+                    ep_length += 1 # step counter
 
                 if env.Done == 1:
                     ep_pointer += 10
@@ -92,9 +93,8 @@ if __name__ == '__main__':
 
                 if env.t_cnt % (env.action_dt/env.sim_dt) == 0:
                     action = agent.choose_action(state)
-
-
-
+                    state = env.state_
+                
                 # log
                 # log.write(ep_pointer + ep_length + 1, 0, f"{ep} / {ep_length}")
                 # log.write(ep_pointer + ep_length + 1, 3, newvars[0])
@@ -105,16 +105,12 @@ if __name__ == '__main__':
                 # log.write(ep_pointer + ep_length + 1, 8, newvars[-1])
                 # log.write(ep_pointer + ep_length + 1, 9, reward)
                 # log.write(ep_pointer + ep_length + 1, 10, reward_calc)
-
-                state = env.state_
-                ep_length += 1  # step counter
-
-
+                
             states_ = np.array(states_)
             score_history.append(score * ep_length / 100)  # ep length should affect score
             ep_pointer += max(int(ep_length / res), 1)
-            #plt.plot(road[ep_pointer, 0], road[ep_pointer, 1], 'bo')
-
+            # plt.plot(road[ep_pointer, 0], road[ep_pointer, 1], 'bo')
+            # plt.show()
             avg_score = np.mean(score_history[-100:])
             if avg_score > best_score:
                 best_score = avg_score
