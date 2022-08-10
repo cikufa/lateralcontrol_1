@@ -162,7 +162,7 @@ class lateralenv:
         plt.xlabel("x")
         plt.ylabel("y")
 
-        plt.plot(self.data_ep[0, :], self.data_ep[1, :], 'r')  # road
+        plt.plot(self.data_ep[:, 0], self.data_ep[:, 1], 'r')  # road
 
         if ep_length != 0:
             plt.plot(np.array(self.coordinates)[:, 0], np.array(self.coordinates)[:, 1], label=score)  # path
@@ -174,6 +174,8 @@ class lateralenv:
             b = 0
 
         ### f2 = aloss
+        print(np.array(alosses).shape)
+        print(np.array(closses).shape)
         plt.figure(2)
         xa = np.arange(len(alosses))
         plt.plot(xa, np.array(alosses)[:, 0, 0])

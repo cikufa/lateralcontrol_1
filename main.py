@@ -24,7 +24,7 @@ if __name__ == '__main__':
     agent = Agent(layer1_dim=128, layer2_dim=64, n_actions=2, alpha_A=0.0003, alpha_C=0.005, gamma=0.5)
     n_episodes = 50000
     data_length = int(road.shape[0])  # sin road = 10,000
-    max_ep_length = 3000  # could be int(data_length / n_episodes)
+    max_ep_length = 300  # could be int(data_length / n_episodes)
     env = lateralenv(road, data_length, n_episodes, max_ep_length)
 
     cnt = 0
@@ -68,11 +68,12 @@ if __name__ == '__main__':
             reward = 0
             reward_calc = 0
             while True:
-                #env.sim_step(action, 0)
-                reward, reward_calc = env.step(action, ep_length)
-               
+                env.sim_step(action)
+
                 if env.t_cnt % (env.reward_dt/env.sim_dt) == 0:
+                    reward, reward_calc = env.step(action, ep_length)
                     reward_for_few_steps += reward
+                    ep_length += 1  # step counter
 
                 if env.Done == 1:
                     ep_pointer += 10
@@ -92,6 +93,7 @@ if __name__ == '__main__':
 
                 if env.t_cnt % (env.action_dt/env.sim_dt) == 0:
                     action = agent.choose_action(state)
+                    state = env.state_
 
 
 
@@ -106,8 +108,8 @@ if __name__ == '__main__':
                 # log.write(ep_pointer + ep_length + 1, 9, reward)
                 # log.write(ep_pointer + ep_length + 1, 10, reward_calc)
 
-                state = env.state_
-                ep_length += 1  # step counter
+
+
 
 
             states_ = np.array(states_)

@@ -7,7 +7,7 @@ import keras
 from keras.layers import Input, Dense
 from keras.models import Model
 import keras.backend as k
-from keras.optimizers import Adam
+from keras.optimizers import adam_v2
 import matplotlib.pyplot as plt
 import pandas as pd
 from envtest import envtest
@@ -28,7 +28,7 @@ class Agent(object):
     def __init__(self, env, gamma=0.98, alpha=0.01):
 
         self.env = env
-        self.state_size = 5  # Number of features describing each state in the environment
+        self.state_size = 2  # Number of features describing each state in the environment
         self.action_size = 1  # Number of features describing each action in the environment
         self.gamma = gamma  # Discount factor for future rewards
         self.alpha = alpha  # Learning rate during training
@@ -55,11 +55,11 @@ class Agent(object):
 
         # The policy network takes the state and reward obtained, to calculate probabilities for each action(stochastic policy)
         actor_model = Model(inputs=[inputs, advantage], outputs=actor_layer)
-        actor_model.compile(optimizer=Adam(learning_rate=self.alpha), loss=custom_loss)
+        actor_model.compile(optimizer=adam_v2.Adam(learning_rate=self.alpha), loss=custom_loss)
 
         # The critic network takes the state, and calculates the value of that state
         critic_model = Model(inputs=inputs, outputs=critic_layer)
-        critic_model.compile(optimizer=Adam(learning_rate=self.alpha), loss='mean_squared_error')
+        critic_model.compile(optimizer=adam_v2.Adam(learning_rate=self.alpha), loss='mean_squared_error')
 
         # The policy network is like the actor network, but doesnt take any reward, and just predicts the stochastic probabilities
         # Training is not done on this network, but on the actor network instead
@@ -86,7 +86,9 @@ class Agent(object):
         state_next_value = self.critic.predict(state_next)
         target_value_now = reward + self.gamma * state_next_value
         advantage = target_value_now - state_now_value
+        #input = tf.stack([state_now, advantage.reshape((1,1))], axis=1)
         self.actor.fit([state_now, advantage], action)
+        #self.actor.fit(input, action)
         self.critic.fit(state_now, target_value_now)
 
     # Training the agent over a number of episodes, so it learns the policy to claim maximum reward
@@ -106,7 +108,10 @@ class Agent(object):
             while True:
                 # Choosing an action as per policy, and going to the next state, claiming reward
                 action = agent.choose_action(state_now)
-                state_next, reward, done, _ = env.step(action, ep_length)
+                reward, _ = env.step(action,ep_length)
+                state_next = env.state_
+                done = env.Done
+                env.coordinates.append(env.vars[2:4, 0])
                 # Incrementing the reward buffer, and step count of the episode
                 reward_buffer += reward
                 j += 1
@@ -126,6 +131,7 @@ class Agent(object):
                     state_now = state_next
                 ep_length += 1
             ep_pointer += max(ep_length, 1)
+            env.render()
 
 
 # Creating an environment, and an agent
