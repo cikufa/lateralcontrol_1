@@ -54,11 +54,11 @@ class lateralenv:
         # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         self.cnt = 0
-        self.dist_limit = 8
-        self.ang_limit1 = 0.6;
+        self.dist_limit = 30 #8
+        self.ang_limit1 = 2 #0.6 
         self.ang_limit2 = -0.6;  # 45 degree0.1
         self.bad_reward = 10
-        self.res = 0.1  # x_acc
+        self.res = 0.1 #0.1  # x_acc
         self.b = 0  # for render
         self.load_checkpoint = False
         self.sim_dt = 0.01
@@ -133,7 +133,7 @@ class lateralenv:
         return reward, reward_calc
 
     def step(self, action, ep_length):  # handle done,
-        self.sim_step(action)
+        # self.sim_step(action)
         dist, angle_diff = self.dist_diff(limit=1)
 
         ## debug only
@@ -162,32 +162,36 @@ class lateralenv:
         plt.xlabel("x")
         plt.ylabel("y")
 
+
         plt.plot(self.data_ep[:, 0], self.data_ep[:, 1], 'r')  # road
+
 
         if ep_length != 0:
             plt.plot(np.array(self.coordinates)[:, 0], np.array(self.coordinates)[:, 1], label=score)  # path
-
         if ep % 10 == 0 and ep_length != 0:
             plt.legend()
             plt.savefig(f"paths/path{ep}.jpg")
             plt.cla()
             b = 0
 
-        ### f2 = aloss
-        print(np.array(alosses).shape)
-        print(np.array(closses).shape)
-        plt.figure(2)
-        xa = np.arange(len(alosses))
-        plt.plot(xa, np.array(alosses)[:, 0, 0])
-        plt.savefig(f"aloss/aloss{ep}.jpg")
-        plt.cla()
+        if ep_length != 0:
+            plt.plot(np.array(self.coordinates)[:, 0], np.array(self.coordinates)[:, 1], label=score)  # path
 
-        ### f3 = closs
-        plt.figure(3)
-        xc = np.arange(len(closses))
-        plt.plot(xc, np.array(closses)[:, 0, 0])
-        plt.savefig(f"closs/closs{ep}.jpg")
-        plt.cla()
+        ### f2 = aloss
+
+        # plt.figure(2)
+        # xa = np.arange(len(alosses))
+        # plt.plot(xa, np.array(alosses)[:, 0, 0])
+        # plt.savefig(f"aloss/aloss{ep}.jpg")
+        # plt.cla()
+
+        # ### f3 = closs
+        # plt.figure(3)
+        # xc = np.arange(len(closses))
+        # plt.plot(xc, np.array(closses)[:, 0, 0])
+        # plt.savefig(f"closs/closs{ep}.jpg")
+        # plt.cla()
+
 
     def reset(self, ep_pointer):  # before each episode
         if ep_pointer > (self.road.shape[0] - 300):  # =max_episode_length. resets the road and stars from the begining
@@ -198,7 +202,9 @@ class lateralenv:
         self.coordinates = []
 
         # a new section of the road excel is selected for each episode
+        print("ep pointer", ep_pointer, ep_pointer+int(self.max_ep_length / self.res))
         self.data_ep = self.road[ep_pointer:ep_pointer + int(self.max_ep_length / self.res), :]
+        # plt.plot(self.data_ep[:,0],self.data_ep[:, 1])
 
         # the car starts on the road
         st_vy = 0
@@ -208,7 +214,7 @@ class lateralenv:
         st_psi = np.arctan2((self.data_ep[1, 1] - self.data_ep[0, 1]), (self.data_ep[1, 0] - self.data_ep[0, 0]))
 
         self.coordinates.append([st_x, st_y])
-
+        
         self.vars = np.array([[st_vy, st_r, st_x, st_y, st_psi]], dtype='float64').T
 
         limited_dist0, limited_angle_diff0 = self.dist_diff(limit=1)

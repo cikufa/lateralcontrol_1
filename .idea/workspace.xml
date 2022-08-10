@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="336947ff-eb89-4d02-925b-c7d58206b7f2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/actor_critic.py" beforeDir="false" afterPath="$PROJECT_DIR$/actor_critic.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/envtest.py" beforeDir="false" afterPath="$PROJECT_DIR$/envtest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lateralenv.py" beforeDir="false" afterPath="$PROJECT_DIR$/lateralenv.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -40,7 +38,7 @@
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.actor_critic">
+  <component name="RunManager" selected="Python.main">
     <configuration name="actor_critic" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="lateralcontrol_1" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -137,8 +135,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.actor_critic" />
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.actor_critic" />
         <item itemvalue="Python.test" />
         <item itemvalue="Python.rmax finder" />
       </list>
@@ -163,7 +161,7 @@
       <workItem from="1659941403986" duration="19314000" />
       <workItem from="1660017996758" duration="6029000" />
       <workItem from="1660029383115" duration="504000" />
-      <workItem from="1660160973727" duration="1460000" />
+      <workItem from="1660160973727" duration="2216000" />
     </task>
     <servers />
   </component>
@@ -185,11 +183,6 @@
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>88</line>
-          <option name="timeStamp" value="6" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/actor_critic.py</url>
           <line>145</line>
