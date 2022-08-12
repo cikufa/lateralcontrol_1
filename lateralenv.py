@@ -163,7 +163,10 @@ class lateralenv:
         plt.xlabel("x")
         plt.ylabel("y")
 
-        plt.plot(self.data_ep[:, 0], self.data_ep[:,1], 'r')  # road
+
+        plt.plot(self.data_ep[:, 0], self.data_ep[:, 1], 'r')  # road
+
+
         if ep_length != 0:
             plt.plot(np.array(self.coordinates)[:, 0], np.array(self.coordinates)[:, 1], label=score)  # path
         if ep % 10 == 0 and ep_length != 0:
@@ -176,6 +179,7 @@ class lateralenv:
             plt.plot(np.array(self.coordinates)[:, 0], np.array(self.coordinates)[:, 1], label=score)  # path
 
         ### f2 = aloss
+
         # plt.figure(2)
         # xa = np.arange(len(alosses))
         # plt.plot(xa, np.array(alosses)[:, 0, 0])
@@ -188,6 +192,7 @@ class lateralenv:
         # plt.plot(xc, np.array(closses)[:, 0, 0])
         # plt.savefig(f"closs/closs{ep}.jpg")
         # plt.cla()
+
 
     def reset(self, ep_pointer):  # before each episode
         if ep_pointer > (self.road.shape[0] - 300):  # =max_episode_length. resets the road and stars from the begining

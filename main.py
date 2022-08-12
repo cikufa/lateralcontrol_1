@@ -73,7 +73,9 @@ if __name__ == '__main__':
                 if env.t_cnt % (env.reward_dt/env.sim_dt) == 0:
                     reward, reward_calc = env.step(action, ep_length)
                     reward_for_few_steps += reward
+
                     ep_length += 1 # step counter
+
 
                 if env.Done == 1:
                     ep_pointer += 10
@@ -94,7 +96,7 @@ if __name__ == '__main__':
                 if env.t_cnt % (env.action_dt/env.sim_dt) == 0:
                     action = agent.choose_action(state)
                     state = env.state_
-                
+
                 # log
                 # log.write(ep_pointer + ep_length + 1, 0, f"{ep} / {ep_length}")
                 # log.write(ep_pointer + ep_length + 1, 3, newvars[0])
@@ -105,7 +107,7 @@ if __name__ == '__main__':
                 # log.write(ep_pointer + ep_length + 1, 8, newvars[-1])
                 # log.write(ep_pointer + ep_length + 1, 9, reward)
                 # log.write(ep_pointer + ep_length + 1, 10, reward_calc)
-                
+
             states_ = np.array(states_)
             score_history.append(score * ep_length / 100)  # ep length should affect score
             ep_pointer += max(int(ep_length / res), 1)
