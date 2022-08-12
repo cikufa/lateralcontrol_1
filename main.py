@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # road= road[:, 1:3]
 
     agent = Agent(layer1_dim=128, layer2_dim=64, n_actions=2, alpha_A=0.0003, alpha_C=0.005, gamma=0.5)
-    n_episodes = 500
+    n_episodes = 2000
     data_length = int(road.shape[0])  # sin road = 10,000
     max_ep_length = 300  # could be int(data_length / n_episodes)
     env = lateralenv(road, data_length, n_episodes, max_ep_length)

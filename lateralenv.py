@@ -54,8 +54,8 @@ class lateralenv:
         # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         self.cnt = 0
-        self.dist_limit = 30 #8
-        self.ang_limit1 = 2 #0.6 
+        self.dist_limit = 5 #8
+        self.ang_limit1 = 0.6 #0.6 
         self.ang_limit2 = -0.6;  # 45 degree0.1
         self.bad_reward = 10
         self.res = 0.1 #0.1  # x_acc
@@ -128,8 +128,9 @@ class lateralenv:
         #k2 = 1 / future_dist + 1 / future_angle_diff ** 2
         ep_len_weight = 1
         reward_calc = f'{weight} * {k1} + {action_weight} * {action} + {ep_len_weight} * {ep_length}'
-        reward = k1 * weight + action_weight * action + ep_len_weight * (
-                self.max_ep_length - self.episode_length_cnt)
+        # reward = k1 * weight + action_weight * action + ep_len_weight * (
+        #         self.max_ep_length - self.episode_length_cnt)
+        reward = -dist
         return reward, reward_calc
 
     def step(self, action, ep_length):  # handle done,
