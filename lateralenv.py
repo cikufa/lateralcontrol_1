@@ -174,23 +174,23 @@ class lateralenv:
             plt.cla()
             b = 0
 
-        if ep_length != 0:
-            plt.plot(np.array(self.coordinates)[:, 0], np.array(self.coordinates)[:, 1], label=score)  # path
+        #if ep_length != 0:
+        #    plt.plot(np.array(self.coordinates)[:, 0], np.array(self.coordinates)[:, 1], label=score)  # path
 
         ### f2 = aloss
 
-        # plt.figure(2)
-        # xa = np.arange(len(alosses))
-        # plt.plot(xa, np.array(alosses)[:, 0, 0])
-        # plt.savefig(f"aloss/aloss{ep}.jpg")
-        # plt.cla()
+        plt.figure(2)
+        xa = np.arange(len(alosses))
+        plt.plot(xa, np.array(alosses)[:, 0, 0])
+        plt.savefig(f"aloss/aloss{ep}.jpg")
+        plt.cla()
 
         # ### f3 = closs
-        # plt.figure(3)
-        # xc = np.arange(len(closses))
-        # plt.plot(xc, np.array(closses)[:, 0, 0])
-        # plt.savefig(f"closs/closs{ep}.jpg")
-        # plt.cla()
+        plt.figure(3)
+        xc = np.arange(len(closses))
+        plt.plot(xc, np.array(closses)[:, 0, 0])
+        plt.savefig(f"closs/closs{ep}.jpg")
+        plt.cla()
 
 
     def reset(self, ep_pointer):  # before each episode
