@@ -6,6 +6,7 @@ import xlsxwriter
 import warnings
 import pandas as pd
 import tensorflow as tf
+import traceback
 #import torch
 warnings.filterwarnings("ignore")
 #device = torch.device("cpu:0")
@@ -68,7 +69,7 @@ if __name__ == '__main__':
             reward = 0
             reward_calc = 0
             while True:
-                env.sim_step(action)
+                env.sim_step(action,1)
 
                 if env.t_cnt % (env.reward_dt/env.sim_dt) == 0:
                     reward, reward_calc = env.step(action, ep_length)
@@ -120,13 +121,17 @@ if __name__ == '__main__':
             print('episode', ep, 'ep length ', ep_length, 'score', score, 'avg_score', avg_score)
             env.render(ep, score * ep_length / 100, ep_length, ep_pointer, alosses, closses)
 
+    except Exception as e:
+        print(e)
+        traceback.print_exc()
+
     finally:
 
         workbook.close()
 
         if not load_checkpoint:
             #ep = [i + 1 for i in range(n_episodes)]
-            score_history = np.array(score_history)
+            score_history = np.array(score_history).reshape((-1,1,1))
             print(score_history.shape)
             x = np.arange(0,score_history.shape[0])
             print(x.shape)
@@ -134,6 +139,6 @@ if __name__ == '__main__':
 
             plt.xlabel("episode")
             plt.ylabel("score")
-            plt.plot(x[:], score_history[:,0,0])
+            plt.plot(x[:], score_history[:, 0, 0])
             plt.savefig(f'scores.png')
             plt.cla()

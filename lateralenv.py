@@ -1,3 +1,5 @@
+import random
+
 import matplotlib.pyplot as plt
 import numpy as np
 import shapely.geometry as geom
@@ -96,11 +98,11 @@ class lateralenv:
         else:
             return dist, angle_diff
 
-    def sim_step(self, action):
+    def sim_step(self, action, multiplier):
         dt, vx, iz, m, cb, cr, db, dr, cd, dd = self.constants
         vy, r, x, y, psi = np.vsplit(self.vars, 5)
-        dt = self.sim_dt
-        self.t_cnt += 1
+        dt = self.sim_dt * multiplier
+
         # calc new state
         par_mat1 = np.array([[cb / (m * vx), cr / m - vx, 0, 0, 0],
                              [db / (iz * vx), dr / iz, 0, 0, 0],
@@ -114,7 +116,10 @@ class lateralenv:
         var_dot_mat = par_mat1 @ self.vars + par_mat2  # (5,1)= (5,5)@(5,1)+(5,1)
 
         self.vars = self.vars + dt * var_dot_mat  # (5,1) =(5,1)+(5,1)
-        self.coordinates.append(self.vars[2:4, 0])
+
+        if multiplier == 1:
+            self.t_cnt += 1
+            self.coordinates.append(self.vars[2:4, 0])
 
     def normalize(self, d, a):
         # return d/(dist_limit-0), a/(ang_limit1-ang_limit2)
@@ -134,6 +139,7 @@ class lateralenv:
 
     def step(self, action, ep_length):  # handle done,
         # self.sim_step(action)
+        actual_vars = self.vars
         dist, angle_diff = self.dist_diff(limit=1)
 
         ## debug only
@@ -152,7 +158,20 @@ class lateralenv:
             reward, reward_calc = self.calc_reward(dist, angle_diff, action, ep_length)
             self.state_ = np.array([dist, angle_diff]).reshape((1,2))  # real state (not limited)
 
-            return reward, reward_calc  # state:(dist, ang_dif)
+        # preview 4 times
+        reward_mul = 0
+        for i in range(4):
+            multiplier = random.randint(1,5)
+            self.sim_step(action, multiplier)
+            dist, angle_diff = self.dist_diff(limit=1)
+            dist, angle_diff = self.normalize(d=dist, a=angle_diff)
+            reward_pre, _ = self.calc_reward(dist, angle_diff, action, ep_length)
+            reward_mul += reward_pre
+
+        reward_mul /= 4
+        self.vars = actual_vars
+
+        return reward+reward_mul, reward_calc  # state:(dist, ang_dif)
 
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -179,18 +198,21 @@ class lateralenv:
 
         ### f2 = aloss
 
-        plt.figure(2)
-        xa = np.arange(len(alosses))
-        plt.plot(xa, np.array(alosses)[:, 0, 0])
-        plt.savefig(f"aloss/aloss{ep}.jpg")
-        plt.cla()
+        if alosses != []:
+            plt.figure(2)
+            xa = np.arange(len(alosses))
+            plt.plot(xa, np.array(alosses)[:, 0, 0])
+            plt.savefig(f"aloss/aloss{ep}.jpg")
+            plt.cla()
 
         # ### f3 = closs
-        plt.figure(3)
-        xc = np.arange(len(closses))
-        plt.plot(xc, np.array(closses)[:, 0, 0])
-        plt.savefig(f"closs/closs{ep}.jpg")
-        plt.cla()
+
+        if closses != []:
+            plt.figure(3)
+            xc = np.arange(len(closses))
+            plt.plot(xc, np.array(closses)[:, 0, 0])
+            plt.savefig(f"closs/closs{ep}.jpg")
+            plt.cla()
 
 
     def reset(self, ep_pointer):  # before each episode
