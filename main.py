@@ -6,6 +6,7 @@ import xlsxwriter
 import warnings
 import pandas as pd
 import tensorflow as tf
+import traceback
 #import torch
 warnings.filterwarnings("ignore")
 #device = torch.device("cpu:0")
@@ -22,7 +23,7 @@ if __name__ == '__main__':
     # road= road[:, 1:3]
 
     agent = Agent(layer1_dim=128, layer2_dim=64, n_actions=2, alpha_A=0.0003, alpha_C=0.005, gamma=0.5)
-    n_episodes = 2000
+    n_episodes = 50
     data_length = int(road.shape[0])  # sin road = 10,000
     max_ep_length = 300  # could be int(data_length / n_episodes)
     env = lateralenv(road, data_length, n_episodes, max_ep_length)
@@ -68,7 +69,7 @@ if __name__ == '__main__':
             reward = 0
             reward_calc = 0
             while True:
-                env.sim_step(action)
+                env.sim_step(action,1)
 
                 if env.t_cnt % (env.reward_dt/env.sim_dt) == 0:
                     reward, reward_calc = env.step(action, ep_length)
@@ -118,8 +119,11 @@ if __name__ == '__main__':
                 best_score = avg_score
 
             print('episode', ep, 'ep length ', ep_length, 'score', score, 'avg_score', avg_score)
-            if (ep_length %1 == 0):
-                env.render(ep, score, ep_length, ep_pointer, alosses, closses)
+            env.render(ep, score * ep_length / 100, ep_length, ep_pointer, alosses, closses)
+
+    except Exception as e:
+        print(e)
+        traceback.print_exc()
 
     finally:
 
@@ -127,12 +131,14 @@ if __name__ == '__main__':
 
         if not load_checkpoint:
             #ep = [i + 1 for i in range(n_episodes)]
-            x = np.arange(0,len(score_history)).reshape(-1, 1)
-            score_history = np.array(score_history).reshape(-1, 1)
+            score_history = np.array(score_history).reshape((-1,1,1))
+            print(score_history.shape)
+            x = np.arange(0,score_history.shape[0])
+            print(x.shape)
             pltlen = int(n_episodes//1000)
-            for i in range(0, x.shape[0], pltlen):
-                plt.xlabel("episode")
-                plt.ylabel("score")
-                plt.plot(x[i:i+pltlen], score_history[i:i+pltlen])
-                plt.savefig(f'scores/score{i}.png')
-                plt.cla()
+
+            plt.xlabel("episode")
+            plt.ylabel("score")
+            plt.plot(x[:], score_history[:, 0, 0])
+            plt.savefig(f'scores.png')
+            plt.cla()

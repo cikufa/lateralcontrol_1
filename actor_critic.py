@@ -1,18 +1,18 @@
 # This Python file aims at implementing a the Advantage Actor-Critic (A2C) approach to solve the CartPole-v0 task of the OpenAI Gym Environment
 
 # Importing all the required frameworks
+from termios import CSUSP
 import numpy as np
 import tensorflow as tf
-import keras
-from keras.layers import Input, Dense
-from keras.models import Model
-import keras.backend as k
-from keras.optimizers import adam_v2
+from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras.models import Model
+import tensorflow.keras.backend as k
+from tensorflow.keras.optimizers import Adam
 import matplotlib.pyplot as plt
 import pandas as pd
 from envtest import envtest
 import random
-
+import tensorflow_probability as tfp
 
 # A function to keep track of average rewards
 def running_reward_avg(rewards):
@@ -29,7 +29,7 @@ class Agent(object):
 
         self.env = env
         self.state_size = 2  # Number of features describing each state in the environment
-        self.action_size = 1  # Number of features describing each action in the environment
+        self.action_size = 2  # Number of features describing each action in the environment
         self.gamma = gamma  # Discount factor for future rewards
         self.alpha = alpha  # Learning rate during training
         self.n_hl1 = 16  # Number of units in the first hidden layer of the network
@@ -40,7 +40,6 @@ class Agent(object):
 
     # Defining a function that builds the actor, critic, and policy network to train/improve the model
     def build_network(self):
-
         inputs = Input(shape=[self.state_size])
         advantage = Input(shape=[1])
         X = Dense(self.n_hl1, activation='relu')(inputs)
@@ -49,17 +48,19 @@ class Agent(object):
         critic_layer = Dense(1)(X)
 
         # Defining a custom loss function (in the keras format) for the policy gradient loss
-        def custom_loss(y_pred, y_true):
-            probs = k.clip(y_pred, 1e-10, 1 - 1e-10)
-            return -k.mean(k.log(probs) * y_true) * advantage
-
+        def custom_loss(actor_model):
+            def loss(y_true, y_pred):
+                probs = tf.clip_by_value(y_pred, 1e-10, 1 - 1e-10)
+                return tf.math.reduce_mean(k.log(probs) * y_true) * advantage
+            return loss
         # The policy network takes the state and reward obtained, to calculate probabilities for each action(stochastic policy)
         actor_model = Model(inputs=[inputs, advantage], outputs=actor_layer)
-        actor_model.compile(optimizer=adam_v2.Adam(learning_rate=self.alpha), loss=custom_loss)
+        l= custom_loss(actor_model)
+        actor_model.compile(optimizer=Adam(learning_rate=self.alpha), loss=l)
 
         # The critic network takes the state, and calculates the value of that state
         critic_model = Model(inputs=inputs, outputs=critic_layer)
-        critic_model.compile(optimizer=adam_v2.Adam(learning_rate=self.alpha), loss='mean_squared_error')
+        critic_model.compile(optimizer=Adam(learning_rate=self.alpha), loss='mean_squared_error')
 
         # The policy network is like the actor network, but doesnt take any reward, and just predicts the stochastic probabilities
         # Training is not done on this network, but on the actor network instead
@@ -81,14 +82,23 @@ class Agent(object):
 
         state_now = state_now.reshape([1, self.state_size])
         state_next = state_next.reshape([1, self.state_size])
-        action = (np.eye(self.action_size)[action]).reshape([1, self.action_size])
-        state_now_value = self.critic.predict(state_now)
-        state_next_value = self.critic.predict(state_next)
+        # action = (np.eye(self.action_size)[action]).reshape([1, self.action_size])
+
+        state_now_value = self.critic(state_now)
+        state_next_value = self.critic(state_next)
         target_value_now = reward + self.gamma * state_next_value
         advantage = target_value_now - state_now_value
-        #input = tf.stack([state_now, advantage.reshape((1,1))], axis=1)
+
+        pars = self.actor([state_now, advantage])  # mean and standard deviation that make action probs
+        pars = np.asarray(tf.squeeze(pars)).reshape(1, 2)
+        sigma, mu = np.hsplit(pars, 2)
+        sigma = tf.exp(sigma)
+        action_probabilities = tfp.distributions.Normal(mu, sigma)  
+        action = action_probabilities.sample()  
+        action = tf.tanh(action) * 0.07 
+
         self.actor.fit([state_now, advantage], action)
-        #self.actor.fit(input, action)
+        # self.actor.fit(input, action)
         self.critic.fit(state_now, target_value_now)
 
     # Training the agent over a number of episodes, so it learns the policy to claim maximum reward
