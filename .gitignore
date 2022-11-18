@@ -41,6 +41,8 @@ Thumbs.db
 model/
 out/
 dataset/
+scores/
+paths/
 
 #my files
 *.pth
