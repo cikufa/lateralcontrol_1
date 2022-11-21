@@ -7,14 +7,14 @@ import warnings
 import pandas as pd
 import tensorflow as tf
 import traceback
-import keras 
+import keras
 #import torch
 warnings.filterwarnings("ignore")
 #device = torch.device("cpu:0")
 import math
 if __name__ == '__main__':
     agent = Agent(layer1_dim=128, layer2_dim=64, n_actions=2, alpha_A=0.0003, alpha_C=0.005, gamma=0.5)
-    n_episodes = 1000
+    n_episodes = 500
     max_ep_length = 200 # could be int(data_length / n_episodes)
     env = lateralenv(n_episodes, max_ep_length)
 
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     score_history = []
     best_score = 0  # reward = 1/positive > 0 -> min score =0
     load_checkpoint = False
-    checkpoints = [200, 1000]
+    checkpoints = [1, 50,200,500]
 
     workbook = xlsxwriter.Workbook('log.xlsx')
     log = workbook.add_worksheet("ep_per_ep")

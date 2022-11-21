@@ -5,27 +5,29 @@ import matplotlib.pyplot as plt
 from tensorflow import keras
 import tensorflow_probability as tfp
 
-model = keras.models.load_model('model/model200')
+model = keras.models.load_model('model/model500')
 loc= np.array([0.0]).reshape((1, 1)) 
-sim = 10
+sim = 20
 j=0
+a=0
 for i in range(sim):
     state = tf.convert_to_tensor([loc], dtype=tf.float32) 
     # print(state)
     k = model.call(state)
     pars = np.asarray(tf.squeeze(k)).reshape(1, 2)
-    sigma, mu = np.hsplit(pars, 2)
-    sigma = tf.exp(sigma)  
+    mu , sigma = np.hsplit(pars, 2)
+    sigma = abs(sigma)  
     action_probabilities = tfp.distributions.Normal(mu, sigma) 
     action = action_probabilities.sample() 
     action = tf.tanh(action)  # a
+    a = a +action
     print(action)
-    # print(action)
     loctmp= loc 
     loc = loc + action 
     xs = [loctmp[0], loc[0]]; ys=[j , j+0.3]
     j= j+0.3
     plt.plot(xs ,ys , 'bo', linestyle= '--' )
+print(a/sim) 
 plt.show()
 # plt.savefig('simulation.png')    
         

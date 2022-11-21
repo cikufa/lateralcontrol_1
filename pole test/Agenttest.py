@@ -29,8 +29,8 @@ class Agent:
         state = tf.convert_to_tensor([observation])  # state shape (1,1,2)
         pars = self.actor(state)  # mean and standard deviation that make action probs
         pars = np.asarray(tf.squeeze(pars)).reshape(1, 2)
-        sigma, mu = np.hsplit(pars, 2)
-        sigma = tf.exp(sigma)  # get rid of negative sigma
+        mu,sigma= np.hsplit(pars, 2)
+        sigma = abs(sigma)  # get rid of negative sigma
         # sigma= abs(sigma)
         action_probabilities = tfp.distributions.Normal(mu, sigma)  # normal distribution with mu,sigma pars
         # log_prob = action_probabilities.log_prob(action_probabilities) #log (gonna be used for gradient)
@@ -74,14 +74,9 @@ class Agent:
             # sigma = np.squeeze(sigma)
             mu = pars[0, 0, 0]
             sigma = pars[0, 0, 1]
-            # print(sigma)
-            # sigma = tf.exp(sigma)
-            # print(sigma)
             action_probs = tfp.distributions.Normal(mu, abs(sigma))  # policy
             log_prob = action_probs.log_prob(self.action[0, 0])
-            # print(mu,sigma)
-            # print(log_prob)
-
+           
             # TD error:
             TD = self.gamma * state_value_ * (1 - int(done)) - state_value
             delta = reward + TD  # 1-done: terminal stRemoves dimensions of size 1 from the shape of a tensor.ate zero effect

@@ -20,8 +20,8 @@ class lateralenv:
         self.coordinates = []
        
         # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        self.dist_limit1 = 10 
-        self.dist_limit2= -10
+        self.dist_limit1 = 4
+        self.dist_limit2= -4
         self.bad_reward = -10
         # self.sim_dt = 0.01
         # self.reward_dt = 0.1
@@ -58,8 +58,8 @@ class lateralenv:
 
 
     def calc_reward(self, ep_length):
-        #reward = 1 /np.abs(self.loc) 
-        reward = - np.abs(self.loc)
+        reward = 1 /np.abs(self.loc) 
+        # reward = - np.abs(self.loc)
         return reward
 
 
