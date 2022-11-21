@@ -4,6 +4,8 @@ import tensorflow_probability as tfp
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras 
+import os
+from pathlib import Path
 
 class Agent:
     def __init__(self, layer1_dim=128, layer2_dim=64, n_actions=2, alpha_A=0.00003, alpha_C=0.00005, gamma=0.99):
@@ -40,7 +42,9 @@ class Agent:
 
     def save_models(self , ep):
         print('... saving models ...')
-        self.actor.save('model')
+        ch_p = os.path.join(os.getcwd(), f'model/model{ep}/')
+        Path(ch_p).mkdir(parents=True, exist_ok=True)
+        self.actor.save(ch_p)
         # self.actor.save_weights(self.actor.checkpoint_file + f'/model{ep}.h5')
         # self.critic.save_weights(self.critic.checkpoint_file)
         # self.actor.save(self.actor.checkpoint_file)    

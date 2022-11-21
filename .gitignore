@@ -43,6 +43,7 @@ out/
 dataset/
 scores/
 paths/
+pole test/model
 
 #my files
 *.pth

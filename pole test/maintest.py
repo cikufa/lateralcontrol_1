@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 import math
 if __name__ == '__main__':
     agent = Agent(layer1_dim=128, layer2_dim=64, n_actions=2, alpha_A=0.0003, alpha_C=0.005, gamma=0.5)
-    n_episodes = 5001
+    n_episodes = 1000
     max_ep_length = 200 # could be int(data_length / n_episodes)
     env = lateralenv(n_episodes, max_ep_length)
 
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     score_history = []
     best_score = 0  # reward = 1/positive > 0 -> min score =0
     load_checkpoint = False
-    checkpoints = [2000, 5000]
+    checkpoints = [200, 1000]
 
     workbook = xlsxwriter.Workbook('log.xlsx')
     log = workbook.add_worksheet("ep_per_ep")
@@ -116,14 +116,12 @@ if __name__ == '__main__':
             # env.render(ep, score * ep_length / 100, ep_length, ep_pointer, alosses, closses)
 
             if ep in checkpoints:
-                agent.actor.save(f'model/model{ep}')
+                agent.save_models(ep)
                
     except Exception as e:
         print(e)
         traceback.print_exc()
     finally:
-        # print(agent.actor.summary())
-        # print('bbbbbbbbbbbbbbbbbb')
         workbook.close()
         if not load_checkpoint:
             score_history = np.array(score_history).reshape((-1,1,1))

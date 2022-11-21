@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 from tensorflow import keras
 import tensorflow_probability as tfp
 
-model = keras.models.load_model('model/model5000')
-loc= np.array([4.0]).reshape((1, 1)) 
+model = keras.models.load_model('model/model200')
+loc= np.array([0.0]).reshape((1, 1)) 
 sim = 10
 j=0
 for i in range(sim):
